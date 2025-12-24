@@ -1,0 +1,9 @@
+.venv
+__pycache__/
+*.pyc
+.env
+node_modules/
+.next/
+.DS_Store
+frontend/capture_screenshots.js
+scripts/demo.md
