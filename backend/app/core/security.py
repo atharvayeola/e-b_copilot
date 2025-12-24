@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Any
 
+import bcrypt
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
@@ -10,7 +11,15 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    """
+    Prefer passlib verification, but fall back to direct bcrypt check if the backend
+    raises (e.g., platform-specific bcrypt wrap bug / length guard).
+    """
+    try:
+        return pwd_context.verify(plain_password, hashed_password)
+    except ValueError:
+        # Last-resort check; still returns False on mismatch.
+        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 
 def get_password_hash(password: str) -> str:
