@@ -230,7 +230,7 @@ def classify_intake_item(self, intake_id: str) -> str:
         if not intake:
             return "intake_not_found"
 
-        # Minimal stub: classify based on filename extension or presence of text
+        # Minimal stub: classify based on filename extension, presence of text, or key phrases
         doc_type = "unknown"
         if intake.filename:
             name = intake.filename.lower()
@@ -238,8 +238,14 @@ def classify_intake_item(self, intake_id: str) -> str:
                 doc_type = "pdf"
             elif any(name.endswith(ext) for ext in [".png", ".jpg", ".jpeg"]):
                 doc_type = "image"
-        if intake.text_content and doc_type == "unknown":
-            doc_type = "note"
+        if intake.text_content:
+            lowered = intake.text_content.lower()
+            if "authorization" in lowered or "prior auth" in lowered:
+                doc_type = "prior_auth"
+            elif "eligibility" in lowered or "benefit" in lowered:
+                doc_type = "benefits_note"
+            elif doc_type == "unknown":
+                doc_type = "note"
 
         intake.doc_type = doc_type
         intake.status = "classified"

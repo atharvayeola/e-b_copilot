@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user, require_roles
 from app.db import models
 from app.db.session import get_db
-from app.schemas.intake import IntakeCreate, IntakeOut
+from app.schemas.intake import IntakeCreate, IntakeOut, IntakeUpdate
 from app.services import audit
 from app.services.storage import ensure_bucket_exists, upload_bytes
 from app.utils.hashing import sha256_bytes, sha256_text
@@ -121,11 +121,67 @@ async def create_intake_item(
 @router.get("", response_model=list[IntakeOut])
 def list_intake_items(
     status_filter: str | None = None,
+    case_id: str | None = None,
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
 ) -> list[IntakeOut]:
     query = db.query(models.IntakeItem).filter(models.IntakeItem.tenant_id == user.tenant_id)
     if status_filter:
         query = query.filter(models.IntakeItem.status == status_filter)
+    if case_id:
+        try:
+            case_uuid = uuid.UUID(case_id)
+        except ValueError:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid case_id")
+        query = query.filter(models.IntakeItem.case_id == case_uuid)
     items = query.order_by(models.IntakeItem.created_at.desc()).all()
     return items
+
+
+@router.patch("/{intake_id}", response_model=IntakeOut)
+def update_intake_item(
+    intake_id: str,
+    payload: IntakeUpdate,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_roles("admin", "reviewer", "scheduler")),
+) -> IntakeOut:
+    try:
+        intake_uuid = uuid.UUID(intake_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid intake_id")
+    intake = (
+        db.query(models.IntakeItem)
+        .filter(models.IntakeItem.id == intake_uuid, models.IntakeItem.tenant_id == user.tenant_id)
+        .first()
+    )
+    if not intake:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Intake not found")
+
+    if payload.case_id:
+        case = (
+            db.query(models.Case)
+            .filter(models.Case.id == payload.case_id, models.Case.tenant_id == user.tenant_id)
+            .first()
+        )
+        if not case:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case not found")
+        intake.case_id = payload.case_id
+
+    update_fields = payload.model_dump(exclude_unset=True, exclude={"case_id"})
+    for field, value in update_fields.items():
+        setattr(intake, field, value)
+
+    db.commit()
+    db.refresh(intake)
+
+    audit.log_event(
+        db,
+        tenant_id=user.tenant_id,
+        actor_type="user",
+        actor_id=user.id,
+        event_type="intake_updated",
+        entity_type="intake_item",
+        entity_id=intake.id,
+        diff_json=payload.model_dump(exclude_unset=True),
+    )
+    return intake

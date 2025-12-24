@@ -129,3 +129,36 @@ def test_intake_text_creation(test_app):
     assert item["status"] == "received"
     assert item["source"] == "upload"
     assert item["text_content"] == "Sample note"
+
+
+def test_intake_filter_and_assign(test_app):
+    client = test_app
+    # create case
+    case_resp = client.post(
+        "/cases",
+        json={"type": "intake", "status": "pending", "title": "Assignment Case"},
+    )
+    assert case_resp.status_code == 200
+    case_id = case_resp.json()["id"]
+
+    # create intake without case
+    intake_resp = client.post(
+        "/intake",
+        json={"text_content": "Eligibility note", "source": "upload"},
+    )
+    assert intake_resp.status_code == 200
+    intake_id = intake_resp.json()["id"]
+
+    # assign intake to case
+    patch_resp = client.patch(f"/intake/{intake_id}", json={"case_id": case_id, "status": "classified"})
+    assert patch_resp.status_code == 200
+    patched = patch_resp.json()
+    assert patched["case_id"] == case_id
+    assert patched["status"] == "classified"
+
+    # filter by case
+    filtered = client.get(f"/intake?case_id={case_id}")
+    assert filtered.status_code == 200
+    items = filtered.json()
+    assert len(items) == 1
+    assert items[0]["id"] == intake_id

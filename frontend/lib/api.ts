@@ -193,3 +193,13 @@ export async function uploadIntakeFile(file: File, opts?: { source?: string; cas
   if (!res.ok) throw new Error("Failed to upload intake item")
   return res.json()
 }
+
+export async function updateIntakeItem(id: string, payload: any) {
+  const res = await apiFetch(`/intake/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error("Failed to update intake item")
+  return res.json()
+}

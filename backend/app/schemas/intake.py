@@ -12,6 +12,13 @@ class IntakeCreate(BaseModel):
     case_id: Optional[UUID] = None
 
 
+class IntakeUpdate(BaseModel):
+    case_id: Optional[UUID] = None
+    status: Optional[str] = None
+    doc_type: Optional[str] = None
+    classification_json: Optional[Any] = None
+
+
 class IntakeOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
