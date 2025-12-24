@@ -149,3 +149,47 @@ export async function fetchAuditEvents(id: string) {
   if (!res.ok) throw new Error("Failed to load audit")
   return res.json()
 }
+
+// Cases (multi-workflow)
+export async function fetchCases(params = "") {
+  const res = await apiFetch(`/cases${params}`)
+  if (!res.ok) throw new Error("Failed to load cases")
+  return res.json()
+}
+
+export async function createCase(payload: any) {
+  const res = await apiFetch(`/cases`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error("Failed to create case")
+  return res.json()
+}
+
+// Intake
+export async function fetchIntakeItems(params = "") {
+  const res = await apiFetch(`/intake${params}`)
+  if (!res.ok) throw new Error("Failed to load intake items")
+  return res.json()
+}
+
+export async function createIntakeText(payload: { text_content: string; source?: string; case_id?: string; filename?: string }) {
+  const res = await apiFetch(`/intake`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error("Failed to create intake item")
+  return res.json()
+}
+
+export async function uploadIntakeFile(file: File, opts?: { source?: string; case_id?: string }) {
+  const form = new FormData()
+  form.append("file", file)
+  if (opts?.source) form.append("source", opts.source)
+  if (opts?.case_id) form.append("case_id", opts.case_id)
+  const res = await apiFetch(`/intake`, { method: "POST", body: form })
+  if (!res.ok) throw new Error("Failed to upload intake item")
+  return res.json()
+}
