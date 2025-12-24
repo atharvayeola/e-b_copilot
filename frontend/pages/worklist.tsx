@@ -134,181 +134,183 @@ export default function WorklistPage() {
       </div>
 
       {mode === "verifications" && (
-      <section className="card" style={{ marginBottom: 20 }}>
-        <h2>Create verification</h2>
-        <form onSubmit={handleCreate} className="grid two">
-          <div>
-            <label>Payer name</label>
-            <input
-              value={form.payer_name}
-              onChange={(event) => setForm({ ...form, payer_name: event.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label>Plan name</label>
-            <input
-              value={form.plan_name}
-              onChange={(event) => setForm({ ...form, plan_name: event.target.value })}
-            />
-          </div>
-          <div>
-            <label>Service category</label>
-            <input
-              value={form.service_category}
-              onChange={(event) => setForm({ ...form, service_category: event.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label>Scheduled at</label>
-            <input
-              type="datetime-local"
-              value={form.scheduled_at}
-              onChange={(event) => setForm({ ...form, scheduled_at: event.target.value })}
-            />
-          </div>
-          <div>
-            <label>Patient name</label>
-            <input
-              value={form.patient_name}
-              onChange={(event) => setForm({ ...form, patient_name: event.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label>Date of birth</label>
-            <input
-              type="date"
-              value={form.date_of_birth}
-              onChange={(event) => setForm({ ...form, date_of_birth: event.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label>Member ID</label>
-            <input
-              value={form.member_id}
-              onChange={(event) => setForm({ ...form, member_id: event.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label>Relationship</label>
-            <select
-              value={form.relationship_to_patient}
-              onChange={(event) => setForm({ ...form, relationship_to_patient: event.target.value })}
-            >
-              <option value="self">Self</option>
-              <option value="spouse">Spouse</option>
-              <option value="child">Child</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div>
-            <label>Subscriber name</label>
-            <input
-              value={form.subscriber_name}
-              onChange={(event) => setForm({ ...form, subscriber_name: event.target.value })}
-            />
-          </div>
-          <div>
-            <label>Group number</label>
-            <input
-              value={form.group_number}
-              onChange={(event) => setForm({ ...form, group_number: event.target.value })}
-            />
-          </div>
-          <div>
-            <label>Phone</label>
-            <input
-              value={form.phone}
-              onChange={(event) => setForm({ ...form, phone: event.target.value })}
-            />
-          </div>
-          <div>
-            <label>Patient identifier</label>
-            <input
-              value={form.patient_identifier}
-              onChange={(event) => setForm({ ...form, patient_identifier: event.target.value })}
-            />
-          </div>
-          <div style={{ alignSelf: "end" }}>
-            <button className="primary" type="submit" disabled={creating}>
-              {creating ? "Creating..." : "Create verification"}
-            </button>
-          </div>
-        </form>
-      </section>
+        <>
+          <section className="card" style={{ marginBottom: 20 }}>
+            <h2>Create verification</h2>
+            <form onSubmit={handleCreate} className="grid two">
+              <div>
+                <label>Payer name</label>
+                <input
+                  value={form.payer_name}
+                  onChange={(event) => setForm({ ...form, payer_name: event.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label>Plan name</label>
+                <input
+                  value={form.plan_name}
+                  onChange={(event) => setForm({ ...form, plan_name: event.target.value })}
+                />
+              </div>
+              <div>
+                <label>Service category</label>
+                <input
+                  value={form.service_category}
+                  onChange={(event) => setForm({ ...form, service_category: event.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label>Scheduled at</label>
+                <input
+                  type="datetime-local"
+                  value={form.scheduled_at}
+                  onChange={(event) => setForm({ ...form, scheduled_at: event.target.value })}
+                />
+              </div>
+              <div>
+                <label>Patient name</label>
+                <input
+                  value={form.patient_name}
+                  onChange={(event) => setForm({ ...form, patient_name: event.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label>Date of birth</label>
+                <input
+                  type="date"
+                  value={form.date_of_birth}
+                  onChange={(event) => setForm({ ...form, date_of_birth: event.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label>Member ID</label>
+                <input
+                  value={form.member_id}
+                  onChange={(event) => setForm({ ...form, member_id: event.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label>Relationship</label>
+                <select
+                  value={form.relationship_to_patient}
+                  onChange={(event) => setForm({ ...form, relationship_to_patient: event.target.value })}
+                >
+                  <option value="self">Self</option>
+                  <option value="spouse">Spouse</option>
+                  <option value="child">Child</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label>Subscriber name</label>
+                <input
+                  value={form.subscriber_name}
+                  onChange={(event) => setForm({ ...form, subscriber_name: event.target.value })}
+                />
+              </div>
+              <div>
+                <label>Group number</label>
+                <input
+                  value={form.group_number}
+                  onChange={(event) => setForm({ ...form, group_number: event.target.value })}
+                />
+              </div>
+              <div>
+                <label>Phone</label>
+                <input
+                  value={form.phone}
+                  onChange={(event) => setForm({ ...form, phone: event.target.value })}
+                />
+              </div>
+              <div>
+                <label>Patient identifier</label>
+                <input
+                  value={form.patient_identifier}
+                  onChange={(event) => setForm({ ...form, patient_identifier: event.target.value })}
+                />
+              </div>
+              <div style={{ alignSelf: "end" }}>
+                <button className="primary" type="submit" disabled={creating}>
+                  {creating ? "Creating..." : "Create verification"}
+                </button>
+              </div>
+            </form>
+          </section>
 
-      <section className="card">
-        <div className="grid" style={{ gridAutoFlow: "column", gap: 12, marginBottom: 16 }}>
-          <div>
-            <label>Status</label>
-            <select
-              value={filters.status}
-              onChange={(event) => setFilters({ ...filters, status: event.target.value })}
-            >
-              <option value="">All</option>
-              <option value="pending">Pending</option>
-              <option value="running">Running</option>
-              <option value="blocked_needs_evidence">Blocked</option>
-              <option value="draft_ready">Draft ready</option>
-              <option value="needs_human_review">Needs review</option>
-              <option value="finalized">Finalized</option>
-            </select>
-          </div>
-          <div>
-            <label>Payer</label>
-            <input
-              value={filters.payer}
-              onChange={(event) => setFilters({ ...filters, payer: event.target.value })}
-            />
-          </div>
-        </div>
+          <section className="card">
+            <div className="grid" style={{ gridAutoFlow: "column", gap: 12, marginBottom: 16 }}>
+              <div>
+                <label>Status</label>
+                <select
+                  value={filters.status}
+                  onChange={(event) => setFilters({ ...filters, status: event.target.value })}
+                >
+                  <option value="">All</option>
+                  <option value="pending">Pending</option>
+                  <option value="running">Running</option>
+                  <option value="blocked_needs_evidence">Blocked</option>
+                  <option value="draft_ready">Draft ready</option>
+                  <option value="needs_human_review">Needs review</option>
+                  <option value="finalized">Finalized</option>
+                </select>
+              </div>
+              <div>
+                <label>Payer</label>
+                <input
+                  value={filters.payer}
+                  onChange={(event) => setFilters({ ...filters, payer: event.target.value })}
+                />
+              </div>
+            </div>
 
-        {loading ? (
-          <p>Loading...</p>
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Patient</th>
-                <th>Payer</th>
-                <th>Service</th>
-                <th>Status</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.patient_name}</td>
-                  <td>{item.payer_name}</td>
-                  <td>{item.service_category}</td>
-                  <td>
-                    <span className={`badge status-${item.status}`}>{item.status}</span>
-                  </td>
-                  <td>{new Date(item.created_at).toLocaleDateString()}</td>
-                  <td>
-                    <div className="field-row">
-                      <Link className="ghost" href={`/verifications/${item.id}`}>
-                        Open
-                      </Link>
-                      {item.status === "pending" && (
-                        <button className="ghost" onClick={() => handleRun(item.id)}>
-                          Run
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
+            {loading ? (
+              <p>Loading...</p>
+            ) : (
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Patient</th>
+                    <th>Payer</th>
+                    <th>Service</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item) => (
+                    <tr key={item.id}>
+                      <td>{item.patient_name}</td>
+                      <td>{item.payer_name}</td>
+                      <td>{item.service_category}</td>
+                      <td>
+                        <span className={`badge status-${item.status}`}>{item.status}</span>
+                      </td>
+                      <td>{new Date(item.created_at).toLocaleDateString()}</td>
+                      <td>
+                        <div className="field-row">
+                          <Link className="ghost" href={`/verifications/${item.id}`}>
+                            Open
+                          </Link>
+                          {item.status === "pending" && (
+                            <button className="ghost" onClick={() => handleRun(item.id)}>
+                              Run
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </section>
+        </>
       )}
 
       {mode === "cases" && (
