@@ -4,6 +4,8 @@ import { useEffect, useState } from "react"
 import {
   createVerification,
   fetchWorklist,
+  fetchCases,
+  fetchIntakeItems,
   clearTokens,
   runVerification,
 } from "../lib/api"
@@ -26,7 +28,10 @@ const emptyForm = {
 export default function WorklistPage() {
   const router = useRouter()
   const [items, setItems] = useState<any[]>([])
+  const [cases, setCases] = useState<any[]>([])
+  const [intakeItems, setIntakeItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [mode, setMode] = useState<"verifications" | "cases">("verifications")
   const [filters, setFilters] = useState({ status: "", payer: "" })
   const [form, setForm] = useState({ ...emptyForm })
   const [creating, setCreating] = useState(false)
@@ -41,9 +46,25 @@ export default function WorklistPage() {
     setLoading(false)
   }
 
+  const loadCasesAndIntake = async () => {
+    setLoading(true)
+    const [caseData, intakeData] = await Promise.all([fetchCases(""), fetchIntakeItems("")])
+    setCases(caseData)
+    setIntakeItems(intakeData)
+    setLoading(false)
+  }
+
   useEffect(() => {
     loadWorklist()
   }, [filters.status, filters.payer])
+
+  useEffect(() => {
+    if (mode === "cases") {
+      loadCasesAndIntake()
+    } else {
+      loadWorklist()
+    }
+  }, [mode])
 
   useEffect(() => {
     if (typeof window !== "undefined" && !window.localStorage.getItem("auth_tokens")) {
@@ -103,6 +124,16 @@ export default function WorklistPage() {
         </div>
       </header>
 
+      <div className="tabs">
+        <button className={`tab ${mode === "verifications" ? "active" : ""}`} onClick={() => setMode("verifications")}>
+          Verifications
+        </button>
+        <button className={`tab ${mode === "cases" ? "active" : ""}`} onClick={() => setMode("cases")}>
+          Cases & Intake
+        </button>
+      </div>
+
+      {mode === "verifications" && (
       <section className="card" style={{ marginBottom: 20 }}>
         <h2>Create verification</h2>
         <form onSubmit={handleCreate} className="grid two">
@@ -278,6 +309,66 @@ export default function WorklistPage() {
           </table>
         )}
       </section>
+      )}
+
+      {mode === "cases" && (
+        <section className="card">
+          <h2>Cases</h2>
+          {loading ? (
+            <p>Loading...</p>
+          ) : (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Title</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cases.map((c: any) => (
+                  <tr key={c.id}>
+                    <td>{c.type}</td>
+                    <td>
+                      <span className={`badge status-${c.status}`}>{c.status}</span>
+                    </td>
+                    <td>{c.title || "-"}</td>
+                    <td>{new Date(c.created_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <h3 style={{ marginTop: 24 }}>Intake items</h3>
+          {loading ? (
+            <p>Loading...</p>
+          ) : (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Source</th>
+                  <th>Status</th>
+                  <th>Doc type</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {intakeItems.map((item: any) => (
+                  <tr key={item.id}>
+                    <td>{item.source}</td>
+                    <td>
+                      <span className={`badge status-${item.status}`}>{item.status}</span>
+                    </td>
+                    <td>{item.doc_type || "-"}</td>
+                    <td>{new Date(item.created_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      )}
     </main>
   )
 }
