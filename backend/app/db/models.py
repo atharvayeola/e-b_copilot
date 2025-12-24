@@ -164,3 +164,44 @@ Index("ix_verifications_created_at", Verification.created_at)
 Index("ix_artifacts_verification", Artifact.verification_id)
 Index("ix_summary_fields_verification", SummaryField.verification_id)
 Index("ix_audit_events_tenant", AuditEvent.tenant_id)
+
+
+class Case(Base):
+    __tablename__ = "cases"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    type = Column(String(64), nullable=False)  # eligibility, intake, prior_auth, appeal, etc.
+    status = Column(String(64), nullable=False)
+    title = Column(String(255), nullable=True)
+    summary = Column(Text, nullable=True)
+    payload = Column(JSONB, nullable=True)  # arbitrary case-specific data
+    sla_due_at = Column(DateTime(timezone=True), nullable=True)
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+
+class IntakeItem(Base):
+    __tablename__ = "intake_items"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    case_id = Column(UUID(as_uuid=True), ForeignKey("cases.id"), nullable=True)
+    status = Column(String(64), nullable=False)
+    source = Column(String(64), nullable=False)  # fax, email, portal, upload
+    doc_type = Column(String(64), nullable=True)  # classified document type
+    filename = Column(String(255), nullable=True)
+    storage_key = Column(String(512), nullable=True)
+    text_content = Column(Text, nullable=True)
+    sha256 = Column(String(64), nullable=True)
+    classification_json = Column(JSONB, nullable=True)
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+Index("ix_cases_tenant_type_status", Case.tenant_id, Case.type, Case.status)
+Index("ix_cases_created_at", Case.created_at)
+Index("ix_intake_items_tenant_status", IntakeItem.tenant_id, IntakeItem.status)

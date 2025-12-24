@@ -44,6 +44,7 @@ E&B Copilot reduces that burden by producing evidence-backed benefits summaries,
 - **Object storage**: S3-compatible (MinIO for local)
 - **Report rendering**: ReportLab (deterministic PDF template)
 - **LLM boundary**: schema-constrained extraction with evidence pointers
+- **New primitives (early)**: generic cases and intake items to support additional workflows (intake, prior auth, appeals)
 
 ## Local setup (venv)
 
@@ -103,6 +104,13 @@ Demo credentials:
 - `admin@demo.com` / `password123`
 - `reviewer@demo.com` / `password123`
 - `scheduler@demo.com` / `password123`
+
+## New multi-product building blocks
+
+- Generic `cases` API (`/cases`) for new workflow types (eligibility, intake, prior_auth, appeal, etc.).
+- `intake` API (`/intake`) to ingest uploads/text from multiple channels and enqueue classification tasks.
+- Celery task `classify_intake_item` stubs document typing; expand with richer models/rules as needed.
+- Run migrations after pulling updates: `alembic upgrade head`.
 
 ## Project structure
 

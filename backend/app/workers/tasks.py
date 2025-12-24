@@ -220,3 +220,42 @@ def generate_report(self, verification_id: str) -> str:
         return "report_generated"
     finally:
         db.close()
+
+
+@celery_app.task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+def classify_intake_item(self, intake_id: str) -> str:
+    db = SessionLocal()
+    try:
+        intake = db.query(models.IntakeItem).filter_by(id=intake_id).first()
+        if not intake:
+            return "intake_not_found"
+
+        # Minimal stub: classify based on filename extension or presence of text
+        doc_type = "unknown"
+        if intake.filename:
+            name = intake.filename.lower()
+            if name.endswith(".pdf"):
+                doc_type = "pdf"
+            elif any(name.endswith(ext) for ext in [".png", ".jpg", ".jpeg"]):
+                doc_type = "image"
+        if intake.text_content and doc_type == "unknown":
+            doc_type = "note"
+
+        intake.doc_type = doc_type
+        intake.status = "classified"
+        intake.classification_json = {"doc_type": doc_type, "source": intake.source}
+        db.commit()
+
+        audit.log_event(
+            db,
+            tenant_id=intake.tenant_id,
+            actor_type="system",
+            actor_id=None,
+            event_type="intake_classified",
+            entity_type="intake_item",
+            entity_id=intake.id,
+            diff_json=intake.classification_json,
+        )
+        return doc_type
+    finally:
+        db.close()
