@@ -2,26 +2,25 @@
 
 ## Why this exists
 
-Outpatient clinics spend hours verifying insurance eligibility and benefits before visits. The process is repetitive, error-prone, and hard to audit, leading to denials, delayed collections, and rework.
+Outpatient teams spend hours verifying insurance eligibility and benefits before visits. The work is repetitive, error-prone, and hard to audit, driving denials and rework. E&B Copilot automates the heavy lifting, produces evidence-backed summaries, routes low-confidence cases to humans, and keeps an immutable audit trail.
 
-E&B Copilot reduces that burden by producing evidence-backed benefits summaries, routing low-confidence cases to human review, and maintaining a full audit trail of every action.
+## What’s implemented
 
-## What the MVP delivers
-
-- Worklist to track verifications by status, payer, and due date.
-- Evidence ingestion (connector response, uploaded PDF/image, or manual transcript).
-- Structured extraction with citations for every field.
-- Human review workflow (approve, edit, or set unknown with reason).
-- Immutable audit log for every case action.
-- Benefits Summary PDF report for finalized cases.
+- **Eligibility worklist**: create, filter, and run verifications; mock connector to return deterministic eligibility data.
+- **Evidence ingestion**: connector text, uploaded PDF/image, or manual transcript; artifacts stored with hashes and metadata.
+- **Extraction & review**: LLM-backed extraction (schema-constrained), confidence routing, human review (approve/edit/unknown with reasons).
+- **Reporting**: deterministic PDF Benefits Summary for finalized cases.
+- **Audit trail**: every key action logged (creation, evidence upload, extraction, edits, finalization, report generation).
+- **Multi-product primitives**: generic `cases` and `intake` flows (intake uploads/text, lightweight classification, assignment to cases) to support future workflows (prior auth, appeals, etc.).
 
 ## Demo flow (end-to-end)
 
-1. Log in and open the worklist.
-2. Create or open a verification case.
-3. Run verification (mock connector) or upload evidence.
-4. Review extracted fields and finalize.
-5. Download the PDF report and view the audit trail.
+1) Log in and open the worklist.  
+2) Create a verification.  
+3) Run verification (mock connector) or upload evidence.  
+4) Review extracted fields; edit or mark unknown; finalize.  
+5) Download the PDF report and inspect the audit log.  
+6) (Optional) Create a case in “Cases & Intake,” upload/paste intake, watch it classify, and assign it to a case.
 
 ## Screenshots
 
@@ -33,84 +32,130 @@ E&B Copilot reduces that burden by producing evidence-backed benefits summaries,
 
 ![Worklist](public/screenshot_worklist.png)
 
+### Cases & Intake (new multi-product tab)
 
+*Use the in-app “Cases & Intake” tab to create cases and upload intake; add more screenshots in `public/` as you capture them.*
 
 ## Architecture (MVP)
 
-- **Frontend**: Next.js (TypeScript)
-- **API**: FastAPI
-- **Background jobs**: Celery + Redis
-- **Database**: PostgreSQL
-- **Object storage**: S3-compatible (MinIO for local)
-- **Report rendering**: ReportLab (deterministic PDF template)
-- **LLM boundary**: schema-constrained extraction with evidence pointers
-- **New primitives (early)**: generic cases and intake items to support additional workflows (intake, prior auth, appeals)
+- **Frontend**: Next.js (TypeScript)  
+- **API**: FastAPI  
+- **Background jobs**: Celery + Redis  
+- **Database**: PostgreSQL  
+- **Object storage**: S3-compatible (MinIO for local)  
+- **Report rendering**: ReportLab (deterministic template)  
+- **LLM boundary**: schema-constrained extraction with evidence pointers  
+- **Primitives**: verifications, artifacts, draft/final summary fields, audit events, cases, intake items
 
-## Local setup (venv)
+## Local setup (always use a venv)
 
+1) **Create venv & install deps**
 ```bash
-python -m venv .venv
+python3.11 -m venv .venv
 source .venv/bin/activate
 pip install -r backend/requirements.txt
 ```
+2) **Env**: `cp .env.example .env` and keep secrets local (never commit `.env`).
 
-Copy `.env.example` to `.env` and adjust values as needed (use `localhost` for local DBs).
-
-### Migrations
-
+3) **Run infra (db/redis/minio)**
 ```bash
-cd backend
-alembic upgrade head
+cd infra
+docker compose -f docker-compose.yml up -d db redis minio
 ```
 
-### Run API
-
+4) **Migrations**
 ```bash
 cd backend
-uvicorn app.main:app --reload
+source ../.venv/bin/activate
+PYTHONPATH=. DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5435/eb_copilot alembic upgrade head
 ```
 
-### Run worker
-
+5) **Start API**
 ```bash
 cd backend
+source ../.venv/bin/activate
+PYTHONPATH=. DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5435/eb_copilot \
+REDIS_URL=redis://localhost:6380/0 \
+OBJECT_STORAGE_ENDPOINT=http://localhost:9002 \
+OBJECT_STORAGE_ACCESS_KEY=minioadmin \
+OBJECT_STORAGE_SECRET_KEY=minioadmin \
+OBJECT_STORAGE_BUCKET=eb-copilot \
+OBJECT_STORAGE_REGION=us-east-1 \
+OBJECT_STORAGE_SECURE=false \
+LLM_PROVIDER=mock \
+LLM_MODEL_NAME=gpt-4o-mini \
+JWT_SECRET=dev-secret \
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+6) **Start worker** (new terminal)
+```bash
+cd backend
+source ../.venv/bin/activate
+PYTHONPATH=. DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5435/eb_copilot \
+REDIS_URL=redis://localhost:6380/0 \
+OBJECT_STORAGE_ENDPOINT=http://localhost:9002 \
+OBJECT_STORAGE_ACCESS_KEY=minioadmin \
+OBJECT_STORAGE_SECRET_KEY=minioadmin \
+OBJECT_STORAGE_BUCKET=eb-copilot \
+OBJECT_STORAGE_REGION=us-east-1 \
+OBJECT_STORAGE_SECURE=false \
+LLM_PROVIDER=mock \
+LLM_MODEL_NAME=gpt-4o-mini \
+JWT_SECRET=dev-secret \
 celery -A app.workers.celery_app.celery_app worker -l info
 ```
 
-### Run frontend
-
+7) **Start frontend** (new terminal)
 ```bash
 cd frontend
 npm install
-npm run dev
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 npm run dev
 ```
+Visit http://localhost:3000.
 
-Set `NEXT_PUBLIC_API_BASE_URL` if the API is not on `http://localhost:8000`.
+> Tip: stop old containers before running host-mode API to avoid port collisions on 8000/3000.
 
-## Docker Compose (optional)
+## Seed demo data & creds
 
 ```bash
-docker compose -f infra/docker-compose.yml up --build
+cd backend
+source ../.venv/bin/activate
+python ../scripts/seed.py
 ```
 
-## Seed demo data
-
-```bash
-source .venv/bin/activate
-python scripts/seed.py
-```
-
-Demo credentials:
+Demo users:
 - `admin@demo.com` / `password123`
 - `reviewer@demo.com` / `password123`
 - `scheduler@demo.com` / `password123`
 
-## New multi-product building blocks
+## Testing
 
-- Generic `cases` API (`/cases`) for new workflow types (eligibility, intake, prior_auth, appeal, etc.).
-- `intake` API (`/intake`) to ingest uploads/text from multiple channels and enqueue classification tasks.
-- Celery task `classify_intake_item` stubs document typing; expand with richer models/rules as needed.
-- Run migrations after pulling updates: `alembic upgrade head`.
+- Backend unit/integration: `cd backend && source ../.venv/bin/activate && pytest -q`
+- Frontend sanity: `cd frontend && npm run build` (Next.js compile + type check)
+- Manual happy path: login → create verification → run (mock) → review → finalize → download report → check audit log.
+
+## APIs and jobs (implemented)
+
+- Auth: `POST /auth/login`, `POST /auth/refresh`
+- Verifications: create/list/get, run (`/verifications/{id}/run`), artifacts upload/text, draft summary, field review, finalize, report download
+- Cases (multi-workflow): `POST/GET /cases`
+- Intake: `POST /intake` (file or text, optional case_id), `GET /intake?status=&case_id=`, `PATCH /intake/{id}` (assign case, status/doc_type/classification)
+- Background jobs: `run_verification`, `extract_summary`, `generate_report`, `classify_intake_item`
+- Audit: every key action recorded with actor, entity, diff
+
+## What’s new (multi-product support)
+
+- Generic `cases` table + API for additional workflows.
+- Intake ingestion + lightweight classification (filename/text heuristics), assignable to cases.
+- Worklist tab for “Cases & Intake” alongside verifications.
+- Safer audit serialization for UUIDs; JSONB → JSON patching in tests.
+
+## Security & secrets
+
+- `.env` is gitignored; keep real secrets out of the repo.
+- Uses signed URLs for object downloads; hashes stored for artifacts and reports.
+- Role-based access (scheduler/reviewer/admin); token-based auth (JWT).
 
 ## Project structure
 
