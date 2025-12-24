@@ -35,8 +35,6 @@ E&B Copilot reduces that burden by producing evidence-backed benefits summaries,
 
 
 
-Add more screenshots for evidence, review, report, and audit as the flow expands (store them in `public/` and reference them here).
-
 ## Architecture (MVP)
 
 - **Frontend**: Next.js (TypeScript)
