@@ -10,6 +10,8 @@ from app.api.routes import (
     audit,
     cases,
     intake,
+    prior_auth,
+    referrals,
 )
 
 api_router = APIRouter()
@@ -21,5 +23,9 @@ api_router.include_router(summary.router, prefix="/verifications", tags=["summar
 api_router.include_router(reports.router, prefix="/verifications", tags=["reports"])
 api_router.include_router(metrics.router, prefix="/metrics", tags=["metrics"])
 api_router.include_router(audit.router, prefix="/audit", tags=["audit"])
+
+# New Platform Modules
 api_router.include_router(cases.router, prefix="/cases", tags=["cases"])
 api_router.include_router(intake.router, prefix="/intake", tags=["intake"])
+api_router.include_router(prior_auth.router, prefix="/prior-auth", tags=["prior-auth"])
+api_router.include_router(referrals.router, prefix="/referrals", tags=["referrals"])

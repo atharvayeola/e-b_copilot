@@ -1,34 +1,30 @@
 from datetime import datetime
-from typing import Any, Optional
 from uuid import UUID
+from typing import Optional, List
+from pydantic import BaseModel
 
-from pydantic import BaseModel, ConfigDict
-
-
-class CaseCreate(BaseModel):
+class CaseBase(BaseModel):
     type: str
-    status: str = "pending"
     title: Optional[str] = None
     summary: Optional[str] = None
-    payload: Optional[Any] = None
+    payload: Optional[dict] = None
     sla_due_at: Optional[datetime] = None
 
+class CaseCreate(CaseBase):
+    pass
 
-class CaseOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class CaseUpdate(BaseModel):
+    status: Optional[str] = None
+    summary: Optional[str] = None
+    payload: Optional[dict] = None
 
+class CaseOut(CaseBase):
     id: UUID
     tenant_id: UUID
-    type: str
     status: str
-    title: Optional[str]
-    summary: Optional[str]
-    payload: Optional[Any]
-    sla_due_at: Optional[datetime]
     created_by: UUID
     created_at: datetime
     updated_at: datetime
 
-
-class CaseListItem(CaseOut):
-    pass
+    class Config:
+        from_attributes = True

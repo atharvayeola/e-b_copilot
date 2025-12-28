@@ -265,3 +265,70 @@ def classify_intake_item(self, intake_id: str) -> str:
         return doc_type
     finally:
         db.close()
+
+
+@celery_app.task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+def process_prior_auth(self, pa_id: str) -> str:
+    from datetime import datetime
+    db = SessionLocal()
+    try:
+        pa = db.query(models.PriorAuthorization).filter_by(id=pa_id).first()
+        if not pa:
+            return "pa_not_found"
+
+        # Simulate clinical extraction for PA
+        pa.status = "submitted"
+        pa.submitted_at = datetime.utcnow()
+        pa.response_json = {
+            "status": "approved",
+            "auth_number": f"AUTH-{uuid.uuid4().hex[:8].upper()}",
+            "valid_until": (datetime.utcnow().replace(year=datetime.utcnow().year + 1)).isoformat()
+        }
+        db.commit()
+
+        audit.log_event(
+            db,
+            tenant_id=pa.tenant_id,
+            actor_type="system",
+            actor_id=None,
+            event_type="pa_processed_automatically",
+            entity_type="prior_authorization",
+            entity_id=pa.id,
+            diff_json=pa.response_json,
+        )
+        return "approved"
+    finally:
+        db.close()
+
+
+@celery_app.task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+def process_referral(self, referral_id: str) -> str:
+    db = SessionLocal()
+    try:
+        referral = db.query(models.Referral).filter_by(id=referral_id).first()
+        if not referral:
+            return "referral_not_found"
+
+        # Simulate referral qualification logic
+        referral.status = "qualified"
+        referral.content_json = {
+            "insurance_verified": True,
+            "provider_in_network": True,
+            "clinical_eligibility": "high",
+            "next_step": "schedule_consultation"
+        }
+        db.commit()
+        
+        audit.log_event(
+            db,
+            tenant_id=referral.tenant_id,
+            actor_type="system",
+            actor_id=None,
+            event_type="referral_qualified",
+            entity_type="referral",
+            entity_id=referral.id,
+            diff_json=referral.content_json,
+        )
+        return "qualified"
+    finally:
+        db.close()

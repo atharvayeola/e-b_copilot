@@ -201,7 +201,60 @@ class IntakeItem(Base):
     created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
+    case = relationship("Case")
 
+    @property
+    def verification_id(self):
+        if self.case and self.case.payload:
+            return self.case.payload.get("verification_id")
+        return None
+
+
+class PriorAuthorization(Base):
+    __tablename__ = "prior_authorizations"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    verification_id = Column(UUID(as_uuid=True), ForeignKey("verifications.id"), nullable=True)
+    status = Column(String(64), nullable=False)  # pending, submitted, approved, denied, appeal_needed
+    medication_name = Column(String(255), nullable=True)
+    procedure_code = Column(String(64), nullable=True)
+    diagnosis_codes = Column(JSONB, nullable=True)  # List of ICD-10
+    clinical_notes = Column(Text, nullable=True)
+    submitted_at = Column(DateTime(timezone=True), nullable=True)
+    response_json = Column(JSONB, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    verification = relationship("Verification")
+
+
+class Referral(Base):
+    __tablename__ = "referrals"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    status = Column(String(64), nullable=False)  # new, processing, qualified, rejected, converted
+    patient_name = Column(String(255), nullable=False)
+    referring_provider = Column(String(255), nullable=True)
+    target_specialty = Column(String(255), nullable=True)
+    clinical_urgency = Column(String(32), nullable=True)  # routine, urgent, stat
+    content_json = Column(JSONB, nullable=True)  # full extracted data
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class IntegrationCredentials(Base):
+    __tablename__ = "integration_credentials"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
+    service_name = Column(String(64), nullable=False)  # trellis, lamar, etc (simulated)
+    api_key_hash = Column(String(255), nullable=False)
+    settings = Column(JSONB, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+Index("ix_prior_auth_tenant", PriorAuthorization.tenant_id)
+Index("ix_referrals_tenant", Referral.tenant_id)
 Index("ix_cases_tenant_type_status", Case.tenant_id, Case.type, Case.status)
 Index("ix_cases_created_at", Case.created_at)
 Index("ix_intake_items_tenant_status", IntakeItem.tenant_id, IntakeItem.status)

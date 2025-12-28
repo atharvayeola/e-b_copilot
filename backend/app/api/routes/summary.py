@@ -26,8 +26,6 @@ def get_summary(
     )
     if not verification:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
-    if verification.status == "finalized":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Already finalized")
 
     fields = (
         db.query(models.SummaryField)

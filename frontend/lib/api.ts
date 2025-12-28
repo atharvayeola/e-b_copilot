@@ -203,3 +203,77 @@ export async function updateIntakeItem(id: string, payload: any) {
   if (!res.ok) throw new Error("Failed to update intake item")
   return res.json()
 }
+
+export async function simulateFaxUpload(file_name: string) {
+  const res = await apiFetch(`/intake/fax-upload?file_name=${encodeURIComponent(file_name)}`, { method: "POST" })
+  if (!res.ok) throw new Error("Failed to simulate fax upload")
+  return res.json()
+}
+
+export async function triggerIntakeClassify(id: string) {
+  const res = await apiFetch(`/intake/${id}/classify`, { method: "POST" })
+  if (!res.ok) throw new Error("Failed to trigger classification")
+  return res.json()
+}
+
+// Prior Auth
+export async function fetchPriorAuths() {
+  const res = await apiFetch(`/prior-auth/`)
+  if (!res.ok) throw new Error("Failed to load prior auths")
+  return res.json()
+}
+
+export async function createPriorAuth(payload: any) {
+  const res = await apiFetch(`/prior-auth/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error("Failed to create prior auth")
+  return res.json()
+}
+
+export async function runPriorAuth(id: string) {
+  const res = await apiFetch(`/prior-auth/${id}/run`, { method: "POST" })
+  if (!res.ok) throw new Error("Failed to run prior auth")
+  return res.json()
+}
+
+// Referrals
+export async function fetchReferrals() {
+  const res = await apiFetch(`/referrals/`)
+  if (!res.ok) throw new Error("Failed to load referrals")
+  return res.json()
+}
+
+export async function createReferral(payload: any) {
+  const res = await apiFetch(`/referrals/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error("Failed to create referral")
+  return res.json()
+}
+
+export async function runReferral(id: string) {
+  const res = await apiFetch(`/referrals/${id}/run`, { method: "POST" })
+  if (!res.ok) throw new Error("Failed to run referral")
+  return res.json()
+}
+
+export async function updateReferral(id: string, payload: any) {
+  const res = await apiFetch(`/referrals/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error("Failed to update referral")
+  return res.json()
+}
+
+export async function bridgeIntakeToCase(itemId: string) {
+  const res = await apiFetch(`/intake/${itemId}/bridge`, { method: "POST" })
+  if (!res.ok) throw new Error("Failed to bridge item")
+  return res.json()
+}
